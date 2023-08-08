@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -25,54 +29,31 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
         setContent {
-            val snackBarHostState = remember { SnackbarHostState() }
-            val scope = rememberCoroutineScope()
-            val focusManager = LocalFocusManager.current
-            val keyBoardController = LocalSoftwareKeyboardController.current
-            var textFieldState by remember {
-                mutableStateOf("")
-            }
-
-            Scaffold(modifier = Modifier.fillMaxSize(),
-                snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 30.dp)
-                ) {
-                    TextField(
-                        value = textFieldState,
-                        label = { Text(text = "Enter your name") },
-                        onValueChange = { textFieldState = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+            LazyColumn() {
+                itemsIndexed(
+                    listOf("This", "is", "Jetpack", "Compose"),
+                ) { index, item ->
+                    Text(
+                        text = "Item $item",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = {
-                        scope.launch {
-                            keyBoardController?.hide()
-                            snackBarHostState.currentSnackbarData?.dismiss()
-                            snackBarHostState.showSnackbar("Hello $textFieldState")
-                        }
-                    }) {
-                        Text(text = "Pls greet me")
-                    }
                 }
             }
         }
