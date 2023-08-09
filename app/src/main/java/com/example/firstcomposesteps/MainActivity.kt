@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,12 +29,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ChainStyle
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.Dimension
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -41,20 +49,41 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            LazyColumn() {
-                itemsIndexed(
-                    listOf("This", "is", "Jetpack", "Compose"),
-                ) { index, item ->
-                    Text(
-                        text = "Item $item",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp)
-                    )
+            val constraints = ConstraintSet {
+                val greenBox = createRefFor("greenbox")
+                val redBox = createRefFor("redbox")
+                val guideLine = createGuidelineFromTop(0.5f)
+
+
+
+                constrain(greenBox) {
+                    top.linkTo(guideLine)
+                    start.linkTo(parent.start)
+                    width = Dimension.value(100.dp)
+                    height = Dimension.value(100.dp)
                 }
+                constrain(redBox) {
+                    top.linkTo(parent.top)
+                    start.linkTo(greenBox.end)
+                    end.linkTo(parent.end)
+                    width = Dimension.value(100.dp)
+                    height = Dimension.value(100.dp)
+                }
+
+                createHorizontalChain(greenBox, redBox, chainStyle = ChainStyle.Packed)
+            }
+
+            ConstraintLayout(constraints, modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .background(Color.Green)
+                        .layoutId("greenbox")
+                )
+                Box(
+                    modifier = Modifier
+                        .background(Color.Red)
+                        .layoutId("redbox")
+                )
             }
         }
     }
