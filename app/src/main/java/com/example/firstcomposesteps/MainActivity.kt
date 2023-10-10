@@ -1,5 +1,7 @@
 package com.example.firstcomposesteps
 
+import android.annotation.SuppressLint
+import android.net.wifi.hotspot2.pps.HomeSp
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import androidx.activity.ComponentActivity
@@ -22,9 +24,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,71 +50,158 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.firstcomposesteps.ui.theme.FirstComposeStepsTheme
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val painter = painterResource(id = R.drawable.img)
-            val description = "photography"
-            val title = "The life is better when your live it"
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .padding(16.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = description, title = title)
+            FirstComposeStepsTheme {
+                val navController = rememberNavController()
+                Scaffold(
+                    bottomBar = {
+                        BottomNavigationBar(
+                            items = listOf(
+                                BottomNavItem(
+                                    name = "Home",
+                                    route = "home",
+                                    icon = Icons.Default.Home,
+                                ),
+                                BottomNavItem(
+                                    name = "Chat",
+                                    route = "chat",
+                                    icon = Icons.Default.Notifications,
+                                    badgeCount = 23
+                                ),
+                                BottomNavItem(
+                                    name = "Settings",
+                                    route = "settings",
+                                    icon = Icons.Default.Settings,
+                                    badgeCount = 214
+                                )
+                            ),
+                            navController = navController,
+                            onItemClick = {
+                                navController.navigate(it.route)
+                            },
+                        )
+                    }
+                ) {
+                    Navigation(navController = navController)
+                }
             }
         }
     }
 }
 
 @Composable
-fun ImageCard(
-    painter: Painter,
-    contentDescription: String,
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(15.dp),
-        elevation = CardDefaults.cardElevation(5.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .height(200.dp)
-        ) {
-            Image(
-                painter = painter,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 300f
-                        )
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Text(text = title, style = TextStyle(color = Color.White, fontSize = 16.sp))
-            }
+fun Navigation(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            HomeScreen()
+        }
+        composable("chat") {
+            ChatScreen()
+        }
+        composable("settings") {
+            SettingsScreen()
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomNavigationBar(
+    items: List<BottomNavItem>,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    onItemClick: (BottomNavItem) -> Unit
+) {
+    val backStackEntry = navController.currentBackStackEntryAsState()
+
+    NavigationBar(
+        modifier = modifier,
+        containerColor = Color.DarkGray,
+        tonalElevation = 5.dp
+    ) {
+        items.forEach { item ->
+            val selected = item.route == backStackEntry.value?.destination?.route
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onItemClick(item) },
+
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.Green,
+                    unselectedIconColor = Color.Gray,
+                    indicatorColor = Color.DarkGray
+                ),
+                icon = {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        if (item.badgeCount > 0) {
+                            BadgedBox(badge = { Badge { Text(item.badgeCount.toString()) } }) {
+                                Icon(imageVector = item.icon, contentDescription = item.name)
+                            }
+                        } else {
+                            Icon(imageVector = item.icon, contentDescription = item.name)
+                        }
+                        if (selected) {
+                            Text(
+                                text = item.name,
+                                textAlign = TextAlign.Center,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun HomeScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    )
+    {
+        Text(text = "Home Screen")
+    }
+}
+
+@Composable
+fun ChatScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    )
+    {
+        Text(text = "Chat Screen")
+    }
+}
+
+@Composable
+fun SettingsScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    )
+    {
+        Text(text = "Settings Screen")
+    }
+}
+
