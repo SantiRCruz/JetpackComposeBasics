@@ -28,78 +28,100 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.firstcomposesteps.ui.theme.FirstComposeStepsTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.shouldShowRationale
+import java.util.jar.Manifest
 
+@OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val painter = painterResource(id = R.drawable.img)
-            val description = "photography"
-            val title = "The life is better when your live it"
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .padding(16.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = description, title = title)
-            }
-        }
-    }
-}
-
-@Composable
-fun ImageCard(
-    painter: Painter,
-    contentDescription: String,
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(15.dp),
-        elevation = CardDefaults.cardElevation(5.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .height(200.dp)
-        ) {
-            Image(
-                painter = painter,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 300f
+            FirstComposeStepsTheme {
+                val permissionsState =
+                    rememberMultiplePermissionsState(
+                        permissions = listOf(
+                            android.Manifest.permission.RECORD_AUDIO,
+                            android.Manifest.permission.CAMERA,
                         )
                     )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Text(text = title, style = TextStyle(color = Color.White, fontSize = 16.sp))
+
+                val lifecycleOwner = LocalLifecycleOwner.current
+                DisposableEffect(
+                    key1 = lifecycleOwner,
+                    effect = {
+                        val observer = LifecycleEventObserver { _, event ->
+                            if (event == Lifecycle.Event.ON_RESUME) {
+                                permissionsState.launchMultiplePermissionRequest()
+                            }
+                        }
+                        lifecycleOwner.lifecycle.addObserver(observer)
+                        onDispose {
+                            lifecycleOwner.lifecycle.removeObserver(observer)
+                        }
+                    }
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    permissionsState.permissions.forEach { perm ->
+                        when (perm.permission) {
+                            android.Manifest.permission.CAMERA -> {
+                                when {
+                                    perm.status.isGranted -> {
+                                        Text(text = "Camera permission accepted")
+                                    }
+
+                                    perm.status.shouldShowRationale -> {
+                                        Text(text = "Camera permission is needed to access the camera")
+
+                                    }
+
+                                    perm.isPermanentlyDenied() -> {
+                                        Text(text = "Camera permission was permanently denied. You can enable it in the app settings.")
+                                    }
+                                }
+                            }
+
+                            android.Manifest.permission.RECORD_AUDIO -> {
+                                when {
+                                    perm.status.isGranted -> {
+                                        Text(text = "Record audio permission accepted")
+                                    }
+
+                                    perm.status.shouldShowRationale -> {
+                                        Text(text = "Record audio is needed to access the camera")
+                                    }
+
+                                    perm.isPermanentlyDenied() -> {
+                                        Text(text = "Camera permission was permanently denied. You can enable it in the app settings.")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
