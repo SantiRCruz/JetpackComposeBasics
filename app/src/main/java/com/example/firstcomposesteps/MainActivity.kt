@@ -34,72 +34,29 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.firstcomposesteps.ui.LocalSpacing
+import com.example.firstcomposesteps.ui.spacing
 import com.example.firstcomposesteps.ui.theme.FirstComposeStepsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val painter = painterResource(id = R.drawable.img)
-            val description = "photography"
-            val title = "The life is better when your live it"
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .padding(16.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = description, title = title)
-            }
-        }
-    }
-}
-
-@Composable
-fun ImageCard(
-    painter: Painter,
-    contentDescription: String,
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(15.dp),
-        elevation = CardDefaults.cardElevation(5.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .height(200.dp)
-        ) {
-            Image(
-                painter = painter,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 300f
-                        )
+            FirstComposeStepsTheme {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.padding(
+                        MaterialTheme.spacing.medium
                     )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                Text(text = title, style = TextStyle(color = Color.White, fontSize = 16.sp))
+                ) {
+                    LocalSpacing.current.medium
+                }
             }
         }
     }
